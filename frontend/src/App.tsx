@@ -12,6 +12,8 @@ import JobDetail from './pages/JobDetail';
 import Tracker from './pages/Tracker';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Resumes from './pages/Resumes';
+import Insights from './pages/Insights';
 
 // Components
 import Layout from './components/Layout';
@@ -20,6 +22,9 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 // Utils
 import { isAuthenticated } from './utils/api';
+
+// Context
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -158,6 +163,44 @@ function AnimatedRoutes() {
         />
 
         <Route
+          path="/resumes"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <Resumes />
+                </motion.div>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/insights"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <Insights />
+                </motion.div>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/profile"
           element={
             <ProtectedRoute>
@@ -244,37 +287,39 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="App">
-        <AnimatedRoutes />
-        
-        {/* Global Toast Notifications */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#fff',
-              color: '#374151',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.75rem',
-              padding: '16px',
-            },
-            success: {
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff',
+      <ThemeProvider>
+        <div className="App">
+          <AnimatedRoutes />
+          
+          {/* Global Toast Notifications */}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'var(--toast-bg)',
+                color: 'var(--toast-color)',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                border: '1px solid var(--toast-border)',
+                borderRadius: '0.75rem',
+                padding: '16px',
               },
-            },
-            error: {
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
               },
-            },
-          }}
-        />
-      </div>
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
+        </div>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

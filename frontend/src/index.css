@@ -6,6 +6,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+/* CSS Variables for theme support */
+:root {
+  --toast-bg: #fff;
+  --toast-color: #374151;
+  --toast-border: #e5e7eb;
+}
+
+.dark {
+  --toast-bg: #1f2937;
+  --toast-color: #f9fafb;
+  --toast-border: #374151;
+}
+
 /* Custom base styles */
 @layer base {
   html {
@@ -14,6 +27,7 @@
   
   body {
     @apply bg-gray-50 text-gray-900 antialiased;
+    @apply dark:bg-gray-900 dark:text-gray-100;
   }
   
   /* Scrollbar styles */
@@ -22,15 +36,15 @@
   }
   
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100;
+    @apply bg-gray-100 dark:bg-gray-800;
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
+    @apply bg-gray-400 dark:bg-gray-500;
   }
 }
 
@@ -46,6 +60,7 @@
   
   .btn-secondary {
     @apply btn bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-primary-500;
+    @apply dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700;
   }
   
   .btn-success {
@@ -70,6 +85,7 @@
   
   .input {
     @apply block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200;
+    @apply dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500;
   }
   
   .input-error {
@@ -78,10 +94,12 @@
   
   .card {
     @apply bg-white rounded-xl shadow-soft border border-gray-200 overflow-hidden;
+    @apply dark:bg-gray-800 dark:border-gray-700;
   }
   
   .card-header {
     @apply px-6 py-4 border-b border-gray-200 bg-gray-50;
+    @apply dark:border-gray-700 dark:bg-gray-900;
   }
   
   .card-body {
@@ -90,6 +108,7 @@
   
   .card-footer {
     @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
+    @apply dark:border-gray-700 dark:bg-gray-900;
   }
   
   .badge {
