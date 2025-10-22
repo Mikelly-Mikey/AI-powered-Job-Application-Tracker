@@ -1,53 +1,170 @@
 # AJAT - AI-Powered Job Application Tracker
 
-A modern, full-stack job application tracking system with AI-powered recommendations and insights.
+A modern, full-stack job application tracking system with AI-powered recommendations and insights. Built with performance, accessibility, and developer experience in mind.
 
 ## 🚀 Features
 
-- **AI-Powered Recommendations**: Get personalized job recommendations based on your profile and preferences
-- **Application Tracking**: Track your job applications through every stage of the process
-- **Resume Management**: Upload, parse, and analyze your resumes with AI insights
-- **Interview Scheduling**: Manage interview schedules and preparation notes
-- **Analytics & Insights**: Get detailed insights into your job search progress
-- **Professional UI**: Modern, responsive design with smooth animations
-- **Real-time Updates**: Stay updated with notifications and real-time data
+### Core Features
+- **AI-Powered Job Matching**: Advanced algorithm matches your skills with job requirements
+- **Resume Parser**: Extract skills and experience from PDF/DOCX resumes using AI
+- **Application Tracking**: Comprehensive tracking through all job application stages
+- **Skill Gap Analysis**: Identify missing skills for your target roles
+- **Interview Preparation**: Track interview questions and company research
+
+### Enhanced UX
+- **Dark/Light Mode**: Beautiful, accessible themes with system preference detection
+- **Responsive Design**: Works on all devices from mobile to desktop
+- **Real-time Updates**: Instant feedback and data synchronization
+- **Keyboard Navigation**: Full keyboard accessibility
+- **Performance Optimized**: Fast loading with code splitting and lazy loading
 
 ## 🛠 Tech Stack
 
-### Backend
-- **Django 5.0+** - Web framework
-- **Django REST Framework** - API development
-- **MongoDB** - Database (via MongoEngine)
-- **JWT Authentication** - Secure authentication
-- **OpenAI API** - AI-powered features
-- **Redis** - Caching and session management
+### Backend (Django)
+- **Django 5.0+** - High-level Python Web framework
+- **Django REST Framework** - Powerful API toolkit
+- **MongoDB (MongoEngine)** - Application data store; SQLite is used internally by Django for admin/auth
+- **JWT Authentication** - Secure token-based auth
+- **OpenAI API** - AI-powered parsing and recommendations
+- **Redis (optional)** - Caching
 
-### Frontend
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Styling
-- **Framer Motion** - Animations
-- **React Query** - Data fetching
-- **React Hook Form** - Form management
-- **Axios** - HTTP client
+### Frontend (React + TypeScript)
+- **React 18** - Latest React with concurrent features
+- **TypeScript** - Type safety and better developer experience
+- **Tailwind CSS 3.0+** - Utility-first CSS framework
+- **ShadCN/UI** - Beautiful, accessible components
+- **Framer Motion** - Smooth animations and transitions
+- **TanStack Query v5** - Powerful data synchronization
+- **React Hook Form** - Performant form management
+- **Vite** - Next-generation frontend tooling
+- **ESLint + Prettier** - Code quality and formatting
 
 ## 📋 Prerequisites
 
 - **Python 3.10+**
 - **Node.js 18+**
-- **MongoDB 6.0+**
-- **Redis 6.0+** (optional, for caching)
+- **MongoDB 6.0+** (or MongoDB Atlas)
+- **Redis 7.0+** (optional)
+- **Git**
 
-## 🔧 Installation
+## 🚀 Quick Start
 
-### 1. Clone the Repository
+### Using start.sh Script (Recommended)
 
-```bash
-git clone <your-repo-url>
-cd AJAT_starter
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/ajat.git
+   cd ajat
+   ```
+
+2. Make the script executable and run:
+   ```bash
+   chmod +x start.sh
+   ./start.sh --init-db
+   ```
+   This will:
+   - Check ports and start both backend and frontend servers
+   - Optionally initialize seed data when using `--init-db`
+   - Note: It expects `backend/.venv` and `frontend/node_modules` to already exist. If missing, follow Manual Setup below first.
+
+3. Access the application at `http://localhost:5173`
+
+### Manual Setup
+
+#### Backend Setup
+
+1. Create and activate virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+2. Install Python dependencies:
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. Run database migrations:
+   ```bash
+   python manage.py migrate
+   ```
+
+5. Start the development server:
+   ```bash
+   python manage.py runserver
+   ```
+
+#### Frontend Setup
+
+1. Install Node.js dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Access the application at `http://localhost:5173`
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the backend directory with the following variables:
+
+```env
+# Django
+DEBUG=True
+SECRET_KEY=your-secret-key
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/ajat_db
+MONGODB_NAME=ajat_db
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# OpenAI
+OPENAI_API_KEY=your-openai-api-key
+
+# JWT
+JWT_SECRET_KEY=your-jwt-secret
+JWT_ALGORITHM=HS256
 ```
 
-### 2. Backend Setup
+## 🧪 Testing
+
+### Backend Tests
+```bash
+cd backend
+python manage.py test
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+### End-to-End Tests
+```bash
+# Install Playwright
+npx playwright install
+
+# Run tests
+npx playwright test
+```
 
 ```bash
 # Navigate to backend directory
@@ -175,14 +292,14 @@ npm run dev
 - `DELETE /api/applications/{id}/` - Delete application
 
 ### Resumes
-- `GET /api/resumes/` - List resumes
-- `POST /api/resumes/` - Upload resume
-- `GET /api/resumes/{id}/` - Get resume details
-- `PUT /api/resumes/{id}/` - Update resume
-- `DELETE /api/resumes/{id}/` - Delete resume
+- `GET /api/resumes/list/` - List resumes (current user)
+- `POST /api/resumes/upload/` - Upload a PDF/DOCX; server extracts text and stores it
+- `POST /api/resumes/text/` - Save pasted resume text
+- `POST /api/resumes/extract-skills/` - Extract skills (uses OpenAI if configured; falls back to keyword matching)
+- `POST /api/resumes/parse/` - AI parse into structured JSON (summary, skills, experience, education)
 
 ### Recommendations
-- `GET /api/recommendations/` - Get AI recommendations
+- `POST /api/recommendations/refresh/` - Generate AI job recommendations based on your latest resume
 
 ### Insights
 - `GET /api/insights/dashboard/` - Dashboard analytics
@@ -265,21 +382,28 @@ npm test
 ```bash
 npm run build
 ```
-2. Deploy the `dist` folder to your hosting service
+2. Build output is emitted to `backend/static/` (see `frontend/vite.config.ts`). Ensure your Django app is configured to serve static files in production.
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📄 License
+## 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🙏 Acknowledgments
+
+- [Tailwind CSS](https://tailwindcss.com/) for the amazing utility-first CSS framework
+- [ShadCN/UI](https://ui.shadcn.com/) for beautiful, accessible components
+- [TanStack Query](https://tanstack.com/query) for server state management
+- [Vite](https://vitejs.dev/) for the lightning-fast development experience
+
+## 🤔 Troubleshooting
 
 If you encounter any issues:
 
@@ -287,7 +411,6 @@ If you encounter any issues:
 2. Ensure all environment variables are set correctly
 3. Verify that MongoDB and Redis are running
 4. Check that all dependencies are installed
-5. Review the API documentation
 
 ## 🔄 Updates
 

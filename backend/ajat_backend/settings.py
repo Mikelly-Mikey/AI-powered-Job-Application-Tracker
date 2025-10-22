@@ -65,9 +65,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "ajat_backend.wsgi.application"
 
-# MongoDB Database Configuration
-# Using MongoEngine directly, no Django ORM database needed
-DATABASES = {}
+# Database Configuration
+# Use SQLite for Django's admin, auth, sessions (required by Django)
+# Use MongoDB with MongoEngine for application data
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # MongoDB Connection using MongoEngine
 import mongoengine

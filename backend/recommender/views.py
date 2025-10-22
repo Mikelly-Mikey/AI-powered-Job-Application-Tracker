@@ -19,10 +19,12 @@ class RefreshRecommendationsView(APIView):
         # Use latest resume text for the user; fallback to empty
         resume = None
         try:
-            resume = Resume.objects.filter(user=request.user).order_by('-parsed_at').first()
+            user_id = request.user.get('user_id') if hasattr(request.user, 'get') else None
+            if user_id:
+                resume = Resume.objects(user_id=user_id).order_by('-parsed_at').first()
         except Exception:
-            pass
-        user_text = getattr(resume, 'text', None) or getattr(resume, 'raw_text', None) or ""
+            resume = None
+        user_text = (getattr(resume, 'raw_text', None) or getattr(resume, 'text', None) or "")
         jobs = list(Job.objects.all())
         if not jobs:
             return Response({"results": []})

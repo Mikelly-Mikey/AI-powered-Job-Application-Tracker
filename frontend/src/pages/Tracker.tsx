@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts'
 import toast from 'react-hot-toast'
 
 type Application = { id: number|string; job?: number|string; job_id?: string; title?: string; company?: string; status: string; notes?: string }
@@ -38,6 +39,20 @@ export default function Tracker(){
     return map
   }, [apps])
 
+  const statusData = useMemo(() => (
+    STATUSES.filter(s => s !== 'saved').map(s => ({ status: s.replace('_',' '), count: byStatus[s]?.length || 0 }))
+  ), [byStatus])
+
+  const statusColor: Record<string, string> = {
+    saved: '#9ca3af',
+    applied: '#3b82f6',
+    phone_screen: '#f59e0b',
+    interviewing: '#8b5cf6',
+    offer: '#10b981',
+    accepted: '#059669',
+    rejected: '#ef4444',
+  }
+
   function onDragStart(e: React.DragEvent, app: Application){
     e.dataTransfer.setData('text/plain', String(app.id))
     setDraggingId(app.id)
@@ -75,6 +90,30 @@ export default function Tracker(){
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Application Tracker</h1>
         <p className="text-sm text-gray-600 dark:text-gray-300">Drag and drop applications between columns to update status.</p>
+      </div>
+
+      <div className="card mb-6">
+        <div className="card-header">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Status Overview</h3>
+        </div>
+        <div className="card-body h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={statusData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="status" stroke="#9ca3af" tick={{ fontSize: 12 }} />
+              <YAxis stroke="#9ca3af" allowDecimals={false} />
+              <Tooltip contentStyle={{ background: 'var(--toast-bg)', color: 'var(--toast-color)', borderColor: 'var(--toast-border)' }} />
+              <Bar dataKey="count" name="Applications">
+                {statusData.map((entry, index) => {
+                  const key = STATUSES[index] || entry.status.replace(' ','_')
+                  return (
+                    <Cell key={`cell-${index}`} fill={statusColor[key] || '#3b82f6'} />
+                  )
+                })}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

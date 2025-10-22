@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function Resumes() {
@@ -13,6 +13,118 @@ export default function Resumes() {
     experience?: Array<{company?: string; title?: string; location?: string; start_date?: string; end_date?: string; bullets?: string[]}>;
     education?: Array<{institution?: string; degree?: string; field?: string; start_date?: string; end_date?: string}>;
   } | null>(null);
+  const [analysisPct, setAnalysisPct] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  function computeAnalysisPct(skillsList: string[]): number {
+    const pct = Math.min(100, Math.round((skillsList.length / 40) * 100));
+    return pct;
+  }
+
+  async function refreshRecommendations(){
+    try{
+      await fetch('/api/recommendations/refresh/', {
+        method:'POST',
+        headers:{ 'Authorization':'Bearer '+localStorage.getItem('access') }
+      })
+    }catch{}
+  }
+
+  async function saveResumeText(resumeText: string){
+    if (!resumeText.trim()) {
+      toast.error('Please provide resume text');
+      return false;
+    }
+    setLoading(true);
+    try{
+      const res = await fetch('/api/resumes/text/', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+localStorage.getItem('access') },
+        body: JSON.stringify({ text: resumeText })
+      });
+      if(!res.ok) throw new Error('Failed to save resume');
+      toast.success('Resume saved');
+      return true;
+    }catch(err:any){ toast.error(err.message || 'Failed to save resume'); return false }
+    finally{ setLoading(false) }
+  }
+
+  async function tryAiParse(resumeText: string){
+    if (!resumeText.trim()) { toast.error('Please provide resume text'); return }
+    setAiLoading(true);
+    try{
+      const res = await fetch('/api/resumes/parse/', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+localStorage.getItem('access') },
+        body: JSON.stringify({ text: resumeText })
+      });
+      if(!res.ok){
+        const errTxt = await res.text();
+        throw new Error(errTxt || 'Failed to parse resume with AI');
+      }
+      const data = await res.json();
+      setParsed(data);
+      if (Array.isArray(data.skills)) setSkills(data.skills);
+      toast.success('AI parsing complete');
+    }catch(err:any){ toast.error(err.message || 'AI parse failed') }
+    finally{ setAiLoading(false) }
+  }
+
+  async function doExtractSkills(resumeText: string){
+    if (!resumeText.trim()) { toast.error('Please provide resume text'); return }
+    setLoading(true);
+    try{
+      const res = await fetch('/api/resumes/extract-skills/', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+localStorage.getItem('access') },
+        body: JSON.stringify({ text: resumeText })
+      });
+      if(!res.ok) throw new Error('Failed to extract skills');
+      const data = await res.json();
+      const list = data.skills || [];
+      setSkills(list);
+      setAnalysisPct(computeAnalysisPct(list));
+      toast.success('Skills extracted');
+    }catch(err:any){ toast.error(err.message || 'Failed to extract skills') }
+    finally{ setLoading(false) }
+  }
+
+  async function processResumeText(resumeText: string){
+    setText(resumeText);
+    const saved = await saveResumeText(resumeText);
+    await tryAiParse(resumeText);
+    await doExtractSkills(resumeText);
+    if (saved) await refreshRecommendations();
+  }
+
+  async function uploadFile(file: File){
+    const name = file.name || ''
+    const ext = name.split('.').pop()?.toLowerCase()
+    if (!ext || !['pdf','docx'].includes(ext)){
+      toast.error('Only PDF or DOCX files are supported for upload');
+      return;
+    }
+    try{
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/resumes/upload/', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access') },
+        body: fd,
+      });
+      if (!res.ok){
+        const t = await res.text();
+        throw new Error(t || 'Upload failed');
+      }
+      const data = await res.json();
+      const txt = data.text || '';
+      setText(txt);
+      toast.success('Resume uploaded and text extracted');
+      await tryAiParse(txt);
+      await doExtractSkills(txt);
+      await refreshRecommendations();
+    }catch(err:any){ toast.error(err.message || 'Upload failed') }
+  }
 
   const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -23,61 +135,17 @@ export default function Resumes() {
     if (!file) return;
 
     try {
-      if (file.type.startsWith('text/')) {
-        const content = await file.text();
-        setText(content);
-        toast.success('Resume text loaded from file');
-      } else {
-        // Fallback: attempt as text; prompt user to paste if unreadable
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const result = reader.result as string;
-            // Simple heuristics: if lots of non-printable chars, ask for paste
-            const nonPrintable = (result.match(/[\x00-\x08\x0E-\x1F]/g) || []).length;
-            if (nonPrintable > 50) {
-              toast.error('Could not extract text from this file. Please paste your resume text below.');
-            } else {
-              setText(result);
-              toast.success('Resume text loaded');
-            }
-          } catch {
-            toast.error('Failed to read file. Please paste your resume text below.');
-          }
-        };
-
-  const aiParse = async () => {
-    if (!text.trim()) {
-      toast.error('Please provide resume text');
-      return;
-    }
-    setAiLoading(true);
-    try{
-      const res = await fetch('/api/resumes/parse/', {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization':'Bearer '+localStorage.getItem('access')
-        },
-        body: JSON.stringify({ text })
-      })
-      if(!res.ok){
-        const errTxt = await res.text();
-        throw new Error(errTxt || 'Failed to parse resume with AI')
-      }
-      const data = await res.json();
-      setParsed(data);
-      if (Array.isArray(data.skills)) setSkills(data.skills);
-      toast.success('AI parsing complete');
-    }catch(err:any){ toast.error(err.message || 'AI parse failed') }
-    finally{ setAiLoading(false) }
-  }
-        reader.readAsText(file);
-      }
+      await uploadFile(file);
     } catch (err: any) {
       toast.error(err.message || 'Failed to read file');
     }
   }, []);
+
+  const onFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try{ await uploadFile(file) }catch(err:any){ toast.error(err.message || 'Failed to read file') }
+  };
 
   const uploadText = async () => {
     if (!text.trim()) {
@@ -143,8 +211,10 @@ export default function Resumes() {
         className={`rounded-xl border-2 border-dashed p-8 mb-6 transition-colors ${dragOver ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10' : 'border-gray-300 dark:border-gray-600'}`}
       >
         <p className="text-center text-gray-600 dark:text-gray-300">
-          Drop a .txt resume here, or paste your resume text below.
+          Drop a .pdf or .docx resume here, or
+          <button type="button" className="ml-1 text-primary-600 hover:text-primary-500 underline" onClick={() => fileInputRef.current?.click()}>click to upload</button>.
         </p>
+        <input ref={fileInputRef} type="file" accept=".pdf,.docx" className="hidden" onChange={onFileInputChange} />
       </div>
 
       <div className="card mb-6">
@@ -159,9 +229,9 @@ export default function Resumes() {
             onChange={(e) => setText(e.target.value)}
           />
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button className="btn-primary" onClick={uploadText} disabled={loading}>Save Resume</button>
-            <button className="btn-secondary" onClick={extractSkills} disabled={loading}>Extract Skills</button>
-            <button className="btn-secondary" onClick={aiParse} disabled={aiLoading}>{aiLoading ? 'Parsing…' : 'AI Parse (skills + experience)'}</button>
+            <button className="btn-primary" onClick={async()=>{ if(await saveResumeText(text)) await refreshRecommendations() }} disabled={loading}>Save Resume</button>
+            <button className="btn-secondary" onClick={async()=>{ await doExtractSkills(text); await refreshRecommendations(); }} disabled={loading}>Extract Skills</button>
+            <button className="btn-secondary" onClick={async()=>{ await tryAiParse(text); setAnalysisPct(computeAnalysisPct(skills)); await refreshRecommendations(); }} disabled={aiLoading}>{aiLoading ? 'Parsing…' : 'AI Parse (skills + experience)'}</button>
           </div>
         </div>
       </div>
@@ -171,6 +241,17 @@ export default function Resumes() {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Extracted Skills</h3>
         </div>
         <div className="card-body">
+          {analysisPct !== null && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-700 dark:text-gray-200">Analysis</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{analysisPct}%</p>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${analysisPct}%` }} />
+              </div>
+            </div>
+          )}
           {skills.length === 0 ? (
             <p className="text-sm text-gray-600 dark:text-gray-300">No skills extracted yet.</p>
           ) : (

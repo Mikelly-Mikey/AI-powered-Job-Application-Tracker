@@ -117,22 +117,27 @@
   
   .badge-primary {
     @apply badge bg-primary-100 text-primary-800;
+    @apply dark:bg-primary-900/50 dark:text-primary-300;
   }
   
   .badge-success {
     @apply badge bg-success-100 text-success-800;
+    @apply dark:bg-success-900/50 dark:text-success-300;
   }
   
   .badge-warning {
     @apply badge bg-warning-100 text-warning-800;
+    @apply dark:bg-warning-900/50 dark:text-warning-300;
   }
   
   .badge-error {
     @apply badge bg-error-100 text-error-800;
+    @apply dark:bg-error-900/50 dark:text-error-300;
   }
   
   .badge-secondary {
     @apply badge bg-gray-100 text-gray-800;
+    @apply dark:bg-gray-700 dark:text-gray-200;
   }
   
   .loading-spinner {

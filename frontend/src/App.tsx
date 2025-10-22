@@ -1,19 +1,19 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Pages
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Recommendations from './pages/Recommendations';
-import JobDetail from './pages/JobDetail';
-import Tracker from './pages/Tracker';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Resumes from './pages/Resumes';
-import Insights from './pages/Insights';
+// Lazy load pages for better performance
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Recommendations = lazy(() => import('./pages/Recommendations'));
+const JobDetail = lazy(() => import('./pages/JobDetail'));
+const Tracker = lazy(() => import('./pages/Tracker'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Resumes = lazy(() => import('./pages/Resumes'));
+const Insights = lazy(() => import('./pages/Insights'));
 
 // Components
 import Layout from './components/Layout';
@@ -23,7 +23,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 // Utils
 import { isAuthenticated } from './utils/api';
 
-// Context
+// Context Providers
 import { ThemeProvider } from './contexts/ThemeContext';
 
 // Create a client
